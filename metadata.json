@@ -1,0 +1,7 @@
+{
+  "name": "Uniq Finance Tracker",
+  "description": "Una aplicación web para gestionar el flujo de caja y los costes de personal de tu empresa, sincronizando todos los datos en tiempo real con tu propia hoja de cálculo de Google Sheets.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

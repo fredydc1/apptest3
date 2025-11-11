@@ -1,0 +1,13 @@
+{
+  "name": "finance-tracker-functions",
+  "version": "1.0.0",
+  "description": "Serverless functions for the Business Finance Tracker application.",
+  "dependencies": {
+    "@google/genai": "^1.29.0",
+    "@netlify/functions": "^2.7.0",
+    "@netlify/neon": "^0.1.0"
+  },
+  "scripts": {
+    "build": "echo 'No build step required for these functions'"
+  }
+}

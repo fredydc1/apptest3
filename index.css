@@ -1,0 +1,7 @@
+/* Provides a base for typography, especially for markdown rendering */
+.prose {
+    color: #374151; /* gray-700 */
+}
+.dark .prose-invert {
+    color: #d1d5db; /* gray-300 */
+}
