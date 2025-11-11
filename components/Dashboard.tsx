@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CashFlowSession, Employee, EmployeeType, HourlyEmployee, SalariedEmployee, SupplierExpense, StructuralCost } from '../types';
+import { CashFlowSession, Employee, EmployeeType, HourlyEmployee, SalariedEmployee, SupplierExpense, StructuralCost, Income } from '../types';
 import { Card } from './ui/Card';
 import { ChartPieIcon } from './icons/ChartPieIcon';
 import { TrendingUpIcon } from './icons/TrendingUpIcon';
@@ -76,17 +76,10 @@ const Dashboard: React.FC<DashboardProps> = ({ sessions, employees, expenses, st
 
     const totalIncome = sessionsThisMonth.reduce((sum, s) => {
       const income = s.income;
-      const sessionIncome = income ? (
-          income.barra1 +
-          income.barra2 +
-          income.barra3 +
-          income.barra4 +
-          income.restaurante +
-          income.vip +
-          income.tickets +
-          income.vapers +
-          income.shishas
-      ) : 0;
+      // Robust way to calculate income, summing all numeric properties except id and date
+      const sessionIncome = income 
+        ? Object.values(income).filter((v): v is number => typeof v === 'number').reduce((s, v) => s + v, 0)
+        : 0;
       return sum + sessionIncome;
     }, 0);
 
@@ -101,103 +94,12 @@ const Dashboard: React.FC<DashboardProps> = ({ sessions, employees, expenses, st
       return total + sessionCost;
     }, 0);
     
-    // Coste de personal fijo se aplica entero cada mes, independientemente de las sesiones.
+    // The cost of salaried staff is applied in full each month.
+    // This assumes that all salaried employees listed are active for the selected month.
     const totalSalariedCost = salariedEmployees.reduce((sum, emp) => sum + emp.baseSalary + emp.otherCosts, 0);
     const totalSupplierExpenses = supplierExpensesThisMonth.reduce((sum, e) => sum + e.amount, 0);
     
-    // Sumamos solo los costes estructurales del mes seleccionado
-    const totalStructuralCosts = structuralCostsThisMonth.reduce((sum, c) => sum + c.amount, 0);
-    
-    const totalExpenses = totalDirectExpenses + totalHourlyCost + totalSalariedCost + totalSupplierExpenses + totalStructuralCosts;
-    const netProfit = totalIncome - totalExpenses;
-    
-    return {
-      monthName: selectedDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }),
-      totalIncome,
-      totalExpenses,
-      netProfit,
-      costBreakdown: [
-        { label: 'Gastos Directos (Caja)', value: totalDirectExpenses, color: '#ef4444' }, // red-500
-        { label: 'Personal por Horas', value: totalHourlyCost, color: '#f97316' }, // orange-500
-        { label: 'Personal Fijo', value: totalSalariedCost, color: '#8b5cf6' }, // violet-500
-        { label: 'Gastos de Proveedores', value: totalSupplierExpenses, color: '#3b82f6' }, // blue-500
-        { label: 'Gastos de Estructura', value: totalStructuralCosts, color: '#10b981' }, // emerald-500
-      ],
-      barChartData: [
-        { 
-            label: 'Costes Fijos (Personal + Estructura)', 
-            value: totalSalariedCost + totalStructuralCosts, 
-            color: '#8b5cf6' // violet-500
-        },
-        { 
-            label: 'Proveedores', 
-            value: totalSupplierExpenses, 
-            color: '#3b82f6' // blue-500
-        },
-        { 
-            label: 'Costes Variables de Sesión', 
-            value: totalHourlyCost + totalDirectExpenses, 
-            color: '#f97316' // orange-500
-        }
-      ]
-    };
-  }, [sessions, employees, expenses, structuralCosts, selectedMonth]);
-
-  const totalCostForBreakdown = monthlyData.costBreakdown.reduce((sum, item) => sum + item.value, 0);
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-            Dashboard: Resumen de <span className="capitalize">{monthlyData.monthName.replace Smonths are 0-indexed
-    const targetYear = year;
-    
-    const selectedDate = new Date(targetYear, targetMonth, 1);
-
-    const filterBySelectedMonth = (item: { date: string }) => {
-        const itemDate = new Date(item.date);
-        return itemDate.getMonth() === targetMonth && itemDate.getFullYear() === targetYear;
-    };
-
-    const sessionsThisMonth = sessions.filter(filterBySelectedMonth);
-    const supplierExpensesThisMonth = expenses.filter(filterBySelectedMonth);
-    const structuralCostsThisMonth = structuralCosts.filter(filterBySelectedMonth);
-
-    const hourlyEmployees = employees.filter((e): e is HourlyEmployee => e.employeeType === EmployeeType.Hourly);
-    const salariedEmployees = employees.filter((e): e is SalariedEmployee => e.employeeType === EmployeeType.Salaried);
-
-    const totalIncome = sessionsThisMonth.reduce((sum, s) => {
-      const income = s.income;
-      const sessionIncome = income ? (
-          income.barra1 +
-          income.barra2 +
-          income.barra3 +
-          income.barra4 +
-          income.restaurante +
-          income.vip +
-          income.tickets +
-          income.vapers +
-          income.shishas
-      ) : 0;
-      return sum + sessionIncome;
-    }, 0);
-
-    const totalDirectExpenses = sessionsThisMonth.reduce((sum, s) => 
-      sum + s.expenses.reduce((expenseSum, e) => expenseSum + e.amount, 0), 0);
-      
-    const totalHourlyCost = sessionsThisMonth.reduce((total, session) => {
-      const sessionCost = session.workedHours.reduce((sessionTotal, log) => {
-        const employee = hourlyEmployees.find(e => e.id === log.employeeId);
-        return sessionTotal + (employee ? log.hours * employee.hourlyRate : 0);
-      }, 0);
-      return total + sessionCost;
-    }, 0);
-    
-    // Coste de personal fijo se aplica entero cada mes, independientemente de las sesiones.
-    const totalSalariedCost = salariedEmployees.reduce((sum, emp) => sum + emp.baseSalary + emp.otherCosts, 0);
-    const totalSupplierExpenses = supplierExpensesThisMonth.reduce((sum, e) => sum + e.amount, 0);
-    
-    // Sumamos solo los costes estructurales del mes seleccionado
+    // We only sum the structural costs for the selected month.
     const totalStructuralCosts = structuralCostsThisMonth.reduce((sum, c) => sum + c.amount, 0);
     
     const totalExpenses = totalDirectExpenses + totalHourlyCost + totalSalariedCost + totalSupplierExpenses + totalStructuralCosts;

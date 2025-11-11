@@ -9,7 +9,7 @@ export const Input: React.FC<InputProps> = ({ label, id, wrapperClassName, class
   const inputId = id || (label ? `input-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined);
   return (
     <div className={wrapperClassName || "w-full"}>
-      {label && (
+      {label && label.length > 0 && (
         <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {label}
         </label>
