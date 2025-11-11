@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CashFlowSession, Employee, EmployeeType, HourlyEmployee, SalariedEmployee, SupplierExpense, StructuralCost } from '../types';
 import { Card } from './ui/Card';
 import { ChartPieIcon } from './icons/ChartPieIcon';
 import { TrendingUpIcon } from './icons/TrendingUpIcon';
 import { TrendingDownIcon } from './icons/TrendingDownIcon';
 import { ScaleIcon } from './icons/ScaleIcon';
+import { Input } from './ui/Input';
+import { CalendarIcon } from './icons/CalendarIcon';
 
 interface DashboardProps {
   sessions: CashFlowSession[];
@@ -51,19 +53,23 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ data, total }) => {
 
 
 const Dashboard: React.FC<DashboardProps> = ({ sessions, employees, expenses, structuralCosts }) => {
-  const monthlyData = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // e.g., "2024-07"
 
-    const filterByCurrentMonth = (item: { date: string }) => {
+  const monthlyData = useMemo(() => {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const targetMonth = month - 1; // JS months are 0-indexed
+    const targetYear = year;
+    
+    const selectedDate = new Date(targetYear, targetMonth, 1);
+
+    const filterBySelectedMonth = (item: { date: string }) => {
         const itemDate = new Date(item.date);
-        return itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear;
+        return itemDate.getMonth() === targetMonth && itemDate.getFullYear() === targetYear;
     };
 
-    const sessionsThisMonth = sessions.filter(filterByCurrentMonth);
-    const supplierExpensesThisMonth = expenses.filter(filterByCurrentMonth);
-    const structuralCostsThisMonth = structuralCosts.filter(filterByCurrentMonth);
+    const sessionsThisMonth = sessions.filter(filterBySelectedMonth);
+    const supplierExpensesThisMonth = expenses.filter(filterBySelectedMonth);
+    const structuralCostsThisMonth = structuralCosts.filter(filterBySelectedMonth);
 
     const hourlyEmployees = employees.filter((e): e is HourlyEmployee => e.employeeType === EmployeeType.Hourly);
     const salariedEmployees = employees.filter((e): e is SalariedEmployee => e.employeeType === EmployeeType.Salaried);
@@ -95,16 +101,18 @@ const Dashboard: React.FC<DashboardProps> = ({ sessions, employees, expenses, st
       return total + sessionCost;
     }, 0);
     
+    // Coste de personal fijo se aplica entero cada mes, independientemente de las sesiones.
     const totalSalariedCost = salariedEmployees.reduce((sum, emp) => sum + emp.baseSalary + emp.otherCosts, 0);
     const totalSupplierExpenses = supplierExpensesThisMonth.reduce((sum, e) => sum + e.amount, 0);
+    
+    // Sumamos solo los costes estructurales del mes seleccionado
     const totalStructuralCosts = structuralCostsThisMonth.reduce((sum, c) => sum + c.amount, 0);
     
     const totalExpenses = totalDirectExpenses + totalHourlyCost + totalSalariedCost + totalSupplierExpenses + totalStructuralCosts;
     const netProfit = totalIncome - totalExpenses;
     
     return {
-      monthName: now.toLocaleString('es-ES', { month: 'long' }),
-      year: currentYear,
+      monthName: selectedDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }),
       totalIncome,
       totalExpenses,
       netProfit,
@@ -117,7 +125,7 @@ const Dashboard: React.FC<DashboardProps> = ({ sessions, employees, expenses, st
       ],
       barChartData: [
         { 
-            label: 'Costes Fijos', 
+            label: 'Costes Fijos (Personal + Estructura)', 
             value: totalSalariedCost + totalStructuralCosts, 
             color: '#8b5cf6' // violet-500
         },
@@ -133,15 +141,121 @@ const Dashboard: React.FC<DashboardProps> = ({ sessions, employees, expenses, st
         }
       ]
     };
-  }, [sessions, employees, expenses, structuralCosts]);
+  }, [sessions, employees, expenses, structuralCosts, selectedMonth]);
 
   const totalCostForBreakdown = monthlyData.costBreakdown.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-        Dashboard: Resumen de <span className="capitalize">{monthlyData.monthName}</span> {monthlyData.year}
-      </h2>
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+            Dashboard: Resumen de <span className="capitalize">{monthlyData.monthName.replace Smonths are 0-indexed
+    const targetYear = year;
+    
+    const selectedDate = new Date(targetYear, targetMonth, 1);
+
+    const filterBySelectedMonth = (item: { date: string }) => {
+        const itemDate = new Date(item.date);
+        return itemDate.getMonth() === targetMonth && itemDate.getFullYear() === targetYear;
+    };
+
+    const sessionsThisMonth = sessions.filter(filterBySelectedMonth);
+    const supplierExpensesThisMonth = expenses.filter(filterBySelectedMonth);
+    const structuralCostsThisMonth = structuralCosts.filter(filterBySelectedMonth);
+
+    const hourlyEmployees = employees.filter((e): e is HourlyEmployee => e.employeeType === EmployeeType.Hourly);
+    const salariedEmployees = employees.filter((e): e is SalariedEmployee => e.employeeType === EmployeeType.Salaried);
+
+    const totalIncome = sessionsThisMonth.reduce((sum, s) => {
+      const income = s.income;
+      const sessionIncome = income ? (
+          income.barra1 +
+          income.barra2 +
+          income.barra3 +
+          income.barra4 +
+          income.restaurante +
+          income.vip +
+          income.tickets +
+          income.vapers +
+          income.shishas
+      ) : 0;
+      return sum + sessionIncome;
+    }, 0);
+
+    const totalDirectExpenses = sessionsThisMonth.reduce((sum, s) => 
+      sum + s.expenses.reduce((expenseSum, e) => expenseSum + e.amount, 0), 0);
+      
+    const totalHourlyCost = sessionsThisMonth.reduce((total, session) => {
+      const sessionCost = session.workedHours.reduce((sessionTotal, log) => {
+        const employee = hourlyEmployees.find(e => e.id === log.employeeId);
+        return sessionTotal + (employee ? log.hours * employee.hourlyRate : 0);
+      }, 0);
+      return total + sessionCost;
+    }, 0);
+    
+    // Coste de personal fijo se aplica entero cada mes, independientemente de las sesiones.
+    const totalSalariedCost = salariedEmployees.reduce((sum, emp) => sum + emp.baseSalary + emp.otherCosts, 0);
+    const totalSupplierExpenses = supplierExpensesThisMonth.reduce((sum, e) => sum + e.amount, 0);
+    
+    // Sumamos solo los costes estructurales del mes seleccionado
+    const totalStructuralCosts = structuralCostsThisMonth.reduce((sum, c) => sum + c.amount, 0);
+    
+    const totalExpenses = totalDirectExpenses + totalHourlyCost + totalSalariedCost + totalSupplierExpenses + totalStructuralCosts;
+    const netProfit = totalIncome - totalExpenses;
+    
+    return {
+      monthName: selectedDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }),
+      totalIncome,
+      totalExpenses,
+      netProfit,
+      costBreakdown: [
+        { label: 'Gastos Directos (Caja)', value: totalDirectExpenses, color: '#ef4444' }, // red-500
+        { label: 'Personal por Horas', value: totalHourlyCost, color: '#f97316' }, // orange-500
+        { label: 'Personal Fijo', value: totalSalariedCost, color: '#8b5cf6' }, // violet-500
+        { label: 'Gastos de Proveedores', value: totalSupplierExpenses, color: '#3b82f6' }, // blue-500
+        { label: 'Gastos de Estructura', value: totalStructuralCosts, color: '#10b981' }, // emerald-500
+      ],
+      barChartData: [
+        { 
+            label: 'Costes Fijos (Personal + Estructura)', 
+            value: totalSalariedCost + totalStructuralCosts, 
+            color: '#8b5cf6' // violet-500
+        },
+        { 
+            label: 'Proveedores', 
+            value: totalSupplierExpenses, 
+            color: '#3b82f6' // blue-500
+        },
+        { 
+            label: 'Costes Variables de Sesión', 
+            value: totalHourlyCost + totalDirectExpenses, 
+            color: '#f97316' // orange-500
+        }
+      ]
+    };
+  }, [sessions, employees, expenses, structuralCosts, selectedMonth]);
+
+  const totalCostForBreakdown = monthlyData.costBreakdown.reduce((sum, item) => sum + item.value, 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+            Dashboard: Resumen de <span className="capitalize">{monthlyData.monthName.replace(/\b\w/g, l => l.toUpperCase())}</span>
+        </h2>
+        <div className="relative flex items-center">
+            <CalendarIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Input
+                type="month"
+                label=""
+                aria-label="Seleccionar mes y año"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="pl-10 !py-2 text-sm"
+                wrapperClassName="w-48"
+            />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
@@ -202,7 +316,7 @@ const Dashboard: React.FC<DashboardProps> = ({ sessions, employees, expenses, st
         </div>
 
         <div className="space-y-3 border-t dark:border-gray-700 pt-4">
-          {monthlyData.costBreakdown.map((item, index) => (
+          {monthlyData.costBreakdown.sort((a, b) => b.value - a.value).map((item, index) => (
             <div key={index} className="flex justify-between items-center text-sm">
               <div className="flex items-center">
                 <span className="h-3 w-3 rounded-full mr-3" style={{ backgroundColor: item.color }}></span>
